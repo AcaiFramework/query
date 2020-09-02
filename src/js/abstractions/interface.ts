@@ -6,8 +6,8 @@ export default interface AbstractQuery<T = object> {
 	// query methods
 	// -------------------------------------------------
 
-	where (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): AbstractQuery;
-	orWhere (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): AbstractQuery;
+	where (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): AbstractQuery<T>;
+	orWhere (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): AbstractQuery<T>;
 
 	// -------------------------------------------------
 	// debug methods
