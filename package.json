@@ -1,0 +1,24 @@
+{
+  "name": "@acai/query",
+  "version": "0.1.0",
+  "description": "A javascript framework that you can work as it was intended to be, easy.",
+  "main": "build/index.ts",
+  "author": "Rafael Correa",
+  "license": "BSD-3-Clause",
+  "private": false,
+  "scripts": {
+    "watch": "ts-node-dev --transpile-only src/js/index.ts",
+    "test": "jest --config jestconfig.json"
+  },
+  "dependencies": {
+    "@types/jest": "^26.0.10",
+    "jest": "^26.4.2",
+    "ts-jest": "^26.3.0",
+    "ts-node": "^9.0.0",
+    "ts-node-dev": "^1.0.0-pre.61",
+    "typescript": "^4.0.2"
+  },
+  "keywords": [
+	  "açai", "query", "queryBuilder", "typescript", "javascript"
+  ]
+}
