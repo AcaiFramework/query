@@ -1,6 +1,6 @@
 <p align="center"><img src="https://github.com/AcaiFramework/query/blob/master/src/img/logo.svg" width="256"></p>
 
-![GitHub](https://img.shields.io/github/license/AcaiFramework/query) ![npm](https://img.shields.io/npm/dm/query) ![npm](https://img.shields.io/npm/v/query) [![Build Status](https://travis-ci.org/AcaiFramework/query.svg?branch=master)](https://travis-ci.org/AcaiFramework/query) [![Support](https://img.shields.io/badge/Patreon-Support-orange.svg?logo=Patreon)](https://www.patreon.com/rafaelcorrea)
+![GitHub](https://img.shields.io/github/license/AcaiFramework/query) ![npm](https://img.shields.io/npm/dm/query) ![npm](https://img.shields.io/npm/v/query) [![Build Status](https://travis-ci.org/AcaiFramework/query.svg?branch=master)](https://travis-ci.org/AcaiFramework/query) [![Support](https://img.shields.io/badge/Patreon-Support-orange.svg?logo=Patreon)](https://www.patreon.com/rafaelcorrea) [![Coverage Status](https://coveralls.io/repos/github/AcaiFramework/query/badge.svg?branch=master)](https://coveralls.io/github/AcaiFramework/query?branch=master)
 
 # Açaí's Framework query builder
 "A simple modular, scalable query builder that let you toggle strategies to easily, used and created by Açaí Framework.
