@@ -1,5 +1,7 @@
 // Interfaces
-import queryInterface, {queryPart, queryStrategy} from "./interface";
+import queryInterface from "./interface";
+import queryBuildPart from "../interfaces/queryBuildPart";
+import queryStrategy from "../interfaces/queryStrategy";
 
 export default abstract class query<T = Object> implements queryInterface<T> {
 
@@ -8,7 +10,7 @@ export default abstract class query<T = Object> implements queryInterface<T> {
 	// -------------------------------------------------
 
 	protected tableName: string = '';
-	protected queryBuild: queryPart = {type:"or", logic:[]};
+	protected queryBuild: queryBuildPart = {type:"or", logic:[]};
 	protected abstract queryType:queryStrategy;
 
 	// -------------------------------------------------
