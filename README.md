@@ -20,3 +20,5 @@ yarn
 ```
 yarn add @acai/query
 ```
+
+## Usage
