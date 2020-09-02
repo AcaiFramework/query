@@ -17,7 +17,7 @@ export default abstract class query<T = Object> implements queryInterface<T> {
 	// query methods
 	// -------------------------------------------------
 
-	public where = (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query => {
+	public where = (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query<T> => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("and", subqueries);
 
@@ -25,7 +25,7 @@ export default abstract class query<T = Object> implements queryInterface<T> {
 		return this;
 	}
 
-	public orWhere = (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query => {
+	public orWhere = (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query<T> => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("or", subqueries);
 
@@ -49,12 +49,8 @@ export default abstract class query<T = Object> implements queryInterface<T> {
 	// get methods
 	// -------------------------------------------------
 	
-	public get = () : T[] => {
-		return [];
-	}
-	
-	public find = (primaryKey : number | string) : any => {
-		return primaryKey;
+	public get = (fields: string[] = ['*']) : T[] => {
+		return this.queryType.querySelect<T>(this.tableName, fields, this.queryType.queryCondition(this.queryBuild));
 	}
 
 	// -------------------------------------------------

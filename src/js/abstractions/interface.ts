@@ -6,8 +6,8 @@ export default interface query<T = Object> {
 	// query methods
 	// -------------------------------------------------
 
-	where (arg1: string | [], arg2?: any, arg3?: any): query;
-	orWhere (arg1: string | [], arg2?: any, arg3?: any): query;
+	where (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query;
+	orWhere (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query;
 
 	// -------------------------------------------------
 	// debug methods
@@ -20,6 +20,5 @@ export default interface query<T = Object> {
 	// get methods
 	// -------------------------------------------------
 
-	get () : T[];
-	find (primaryKey : string | number) : T;
+	get (fields: string[]) : T[];
 }
