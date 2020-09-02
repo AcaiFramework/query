@@ -12,7 +12,7 @@ const resolveValueType = (value: any) => {
 
 const resolveQueryPart = (queryBuild: queryBuildPart) => {
 	const parts = queryBuild.logic.map(item => {
-		const parts = item.logic.map((subitem: queryBuildPart | [string, string, any]) => {
+		const subparts = item.logic.map((subitem: queryBuildPart | [string, string, any]) => {
 			if ((subitem as queryBuildPart).type) {
 				return `(${resolveQueryPart(subitem as queryBuildPart)})`;
 			}
@@ -21,7 +21,7 @@ const resolveQueryPart = (queryBuild: queryBuildPart) => {
 			return `${arrayitem[0]} ${arrayitem[1]} ${resolveValueType(arrayitem[2])}`;
 		});
 
-		return parts.join(` ${item.type === "and" ? 'AND':"OR"} `);
+		return subparts.join(` ${item.type === "and" ? 'AND':"OR"} `);
 	});
 
 	return parts.join(` ${queryBuild.type === "and" ? 'AND':"OR"} `);

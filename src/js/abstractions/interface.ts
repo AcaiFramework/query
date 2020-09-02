@@ -1,13 +1,13 @@
 // Interfaces
 import queryBuildPart from "../interfaces/queryBuildPart";
 
-export default interface query<T = Object> {
+export default interface AbstractQuery<T = object> {
 	// -------------------------------------------------
 	// query methods
 	// -------------------------------------------------
 
-	where (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query;
-	orWhere (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): query;
+	where (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): AbstractQuery;
+	orWhere (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): AbstractQuery;
 
 	// -------------------------------------------------
 	// debug methods

@@ -1,10 +1,10 @@
 // Interfaces
 import queryBuildPart from "./queryBuildPart";
 
-export default interface queryStrategy {
+export default interface QueryStrategy {
 	queryCondition(query: queryBuildPart): string;
-	querySelect<T = Object>(table: string, fields?: string[], condition?: string): T[];
-	queryAdd<T = Object>(table: string, condition: string): T;
-	queryUpdate<T = Object>(table: string, condition: string): T;
+	querySelect<T = object>(table: string, fields?: string[], condition?: string): T[];
+	queryAdd<T = object>(table: string, fields: T): T;
+	queryUpdate<T = object>(table: string, fields: T, condition: string): T;
 	queryDelete(table: string, condition: string): boolean;
 }

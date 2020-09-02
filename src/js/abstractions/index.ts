@@ -3,7 +3,7 @@ import queryInterface from "./interface";
 import queryBuildPart from "../interfaces/queryBuildPart";
 import queryStrategy from "../interfaces/queryStrategy";
 
-export default abstract class query<T = Object> implements queryInterface<T> {
+export default abstract class Query<T = object> implements queryInterface<T> {
 
 	// -------------------------------------------------
 	// properties
@@ -51,6 +51,22 @@ export default abstract class query<T = Object> implements queryInterface<T> {
 	
 	public get = (fields: string[] = ['*']) : T[] => {
 		return this.queryType.querySelect<T>(this.tableName, fields, this.queryType.queryCondition(this.queryBuild));
+	}
+
+	// -------------------------------------------------
+	// manipulation methods
+	// -------------------------------------------------
+
+	public store = (fields: T) => {
+		return this.queryType.queryAdd<T>(this.tableName, fields);
+	}
+
+	public update = (fields: T) => {
+		return this.queryType.queryUpdate<T>(this.tableName, fields, this.queryType.queryCondition(this.queryBuild));
+	}
+
+	public delete = () => {
+		return this.queryType.queryDelete(this.tableName, this.queryType.queryCondition(this.queryBuild));
 	}
 
 	// -------------------------------------------------

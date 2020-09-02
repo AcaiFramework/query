@@ -12,7 +12,7 @@ const resolveValueType = (value: any) => {
 
 const resolveQueryPart = (queryBuild: queryBuildPart) => {
 	const parts = queryBuild.logic.map(item => {
-		const parts = item.logic.map((subitem: queryBuildPart | [string, string, any]) => {
+		const subparts = item.logic.map((subitem: queryBuildPart | [string, string, any]) => {
 			if ((subitem as queryBuildPart).type) {
 				return `(${resolveQueryPart(subitem as queryBuildPart)})`;
 			}
@@ -21,7 +21,7 @@ const resolveQueryPart = (queryBuild: queryBuildPart) => {
 			return `${arrayitem[0]} ${arrayitem[1]} ${resolveValueType(arrayitem[2])}`;
 		});
 
-		return parts.join(` ${item.type === "and" ? 'AND':"OR"} `);
+		return subparts.join(` ${item.type === "and" ? 'AND':"OR"} `);
 	});
 
 	return parts.join(` ${queryBuild.type === "and" ? 'AND':"OR"} `);
@@ -31,6 +31,69 @@ const resolveQueryPart = (queryBuild: queryBuildPart) => {
 // Default export
 // -------------------------------------------------
 
-export default {
-	queryCondition: (queryBuild: queryBuildPart): string => resolveQueryPart(queryBuild),
-} as queryStrategy;
+class Strategy implements queryStrategy {
+	// -------------------------------------------------
+	// Properties
+	// -------------------------------------------------
+
+	private static database: any = {};
+	private lastQuery: any;
+
+	// -------------------------------------------------
+	// Methods
+	// -------------------------------------------------
+
+	public getLastQuery = () => this.lastQuery;
+
+	public queryCondition = (queryBuild: queryBuildPart) => {
+		return resolveQueryPart(queryBuild);
+	}
+
+	public querySelect = <T = object>(table: string, fields?: string[], condition?: string) => {
+		// Prepare table
+		if (!Strategy.database[table]) return [];
+
+		// Save query
+		this.lastQuery = {table, fields, condition, action: 'select'};
+
+		return Strategy.database[table] as T[];
+	}
+
+	public queryAdd = <T = object>(table: string, fields: T) => {
+		// Prepare table
+		if (!Strategy.database[table]) Strategy.database[table] = [];
+
+		// Add field
+		Strategy.database[table].push(fields);
+
+		// Save query
+		this.lastQuery = {table, fields, action: 'store'};
+
+		return fields as T;
+	}
+
+	public queryUpdate = <T = object>(table: string, fields: T, condition: string) => {
+		// Prepare table
+		if (!Strategy.database[table]) Strategy.database[table] = [];
+
+		// Add field
+		Strategy.database[table].push(fields);
+
+		// Save query
+		this.lastQuery = {table, fields, condition, action: 'update'};
+
+		return fields as T;
+	}
+
+	public queryDelete = (table: string, condition: string): boolean => {
+		// Prepare table
+		if (!Strategy.database[table]) return false;
+
+		// Save query
+		this.lastQuery = {table, condition, action: 'delete'};
+
+		return true;
+	}
+}
+
+export default new Strategy();
