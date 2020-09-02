@@ -1,7 +1,7 @@
 {
   "name": "@acai/query",
   "version": "0.1.0",
-  "description": "A javascript framework that you can work as it was intended to be, easy.",
+  "description": "A simple modular, scalable query builder that let you toggle strategies to easily, used and created by Açaí Framework",
   "main": "build/index.ts",
   "author": "Rafael Correa",
   "license": "BSD-3-Clause",
