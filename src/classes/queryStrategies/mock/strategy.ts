@@ -1,6 +1,7 @@
 // Interfaces
-import queryBuildPart from "../../../interfaces/queryBuildPart";
-import queryStrategy from "../../../interfaces/queryStrategy";
+import queryBuildPart 	from "../../../interfaces/QueryPart.ts";
+import ModelContent 	from "../../../interfaces/ModelContent.ts";
+import queryStrategy 	from "../../../interfaces/queryStrategy.ts";
 
 // -------------------------------------------------
 // Helpers
@@ -11,7 +12,7 @@ const resolveValueType = (value: any) => {
 }
 
 const resolveQueryPart = (queryBuild: queryBuildPart) => {
-	const parts = queryBuild.logic.map(item => {
+	const parts = queryBuild.logic.map((item: any) => {
 		const subparts = item.logic.map((subitem: queryBuildPart | [string, string, any]) => {
 			if ((subitem as queryBuildPart).type) {
 				return `(${resolveQueryPart(subitem as queryBuildPart)})`;
@@ -49,7 +50,7 @@ class Strategy implements queryStrategy {
 		return resolveQueryPart(queryBuild);
 	}
 
-	public querySelect = <T = object>(table: string, fields?: string[], condition?: string) => {
+	public querySelect = <T = Record<string, ModelContent>>(table: string, fields?: string[], condition?: string) => {
 		// Prepare table
 		if (!Strategy.database[table]) return [];
 
@@ -59,7 +60,7 @@ class Strategy implements queryStrategy {
 		return Strategy.database[table] as T[];
 	}
 
-	public queryAdd = <T = object>(table: string, fields: T) => {
+	public queryAdd = <T = Record<string, ModelContent>>(table: string, fields: T) => {
 		// Prepare table
 		if (!Strategy.database[table]) Strategy.database[table] = [];
 
@@ -72,7 +73,7 @@ class Strategy implements queryStrategy {
 		return fields as T;
 	}
 
-	public queryUpdate = <T = object>(table: string, fields: T, condition: string) => {
+	public queryUpdate = <T = Record<string, ModelContent>>(table: string, fields: T, condition: string) => {
 		// Prepare table
 		if (!Strategy.database[table]) Strategy.database[table] = [];
 

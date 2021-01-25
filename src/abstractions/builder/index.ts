@@ -1,23 +1,25 @@
 // Interfaces
-import queryInterface from "./interface";
-import queryBuildPart from "../interfaces/queryBuildPart";
-import queryStrategy from "../interfaces/queryStrategy";
+import queryInterface 		from "./interface.ts";
+import QueryPart 			from "../../interfaces/QueryPart.ts";
+import queryStrategy 		from "../../interfaces/queryStrategy.ts";
+import GenericModelContent 	from "../../interfaces/ModelContent.ts";
+import QueryComparison 		from "../../interfaces/QueryComparison.ts";
 
-export default abstract class Query<T = object> implements queryInterface<T> {
+export default abstract class Query<T = Record<string, string | number | boolean>> implements queryInterface<T> {
 
 	// -------------------------------------------------
 	// properties
 	// -------------------------------------------------
 
-	protected tableName: string = '';
-	protected queryBuild: queryBuildPart = {type:"or", logic:[]};
+	protected tableName 			= '';
+	protected queryBuild: QueryPart = {type:"or", logic:[]};
 	protected abstract queryType:queryStrategy;
 
 	// -------------------------------------------------
 	// query methods
 	// -------------------------------------------------
 
-	public where = (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): Query<T> => {
+	public where = (arg1: string | [string, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query<T> => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("and", subqueries);
 
@@ -25,7 +27,7 @@ export default abstract class Query<T = object> implements queryInterface<T> {
 		return this;
 	}
 
-	public orWhere = (arg1: string | [string, any, any?] | [string, any, any?][], arg2?: any, arg3?: any): Query<T> => {
+	public orWhere = (arg1: string | [string, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query<T> => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("or", subqueries);
 
@@ -74,9 +76,9 @@ export default abstract class Query<T = object> implements queryInterface<T> {
 	// -------------------------------------------------
 
 	private push (type: "and" | "or", subqueries: any[]) {
-		if (this.queryBuild.logic.length !== 0 && this.queryBuild.logic[this.queryBuild.logic.length - 1].type === type) {
+		if (this.queryBuild.logic.length !== 0 && (this.queryBuild.logic as any)[this.queryBuild.logic.length - 1].type === type) {
 			for (let i = 0; i < subqueries.length; i ++) {
-				this.queryBuild.logic[this.queryBuild.logic.length - 1].logic.push(subqueries[i]);
+				(this.queryBuild.logic as any)[this.queryBuild.logic.length - 1].logic.push(subqueries[i]);
 			}
 		}
 		else {
@@ -87,7 +89,7 @@ export default abstract class Query<T = object> implements queryInterface<T> {
 		}
 	}
 
-	private buildQueryPart = (arg1: string | [string, any, any?][], arg2?: any, arg3?: any): any[] => {
+	private buildQueryPart = (arg1: string | [string, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent) => {
 		if (typeof arg1 === "string") {
 			if (arg3) {
 				return [[arg1, arg2, arg3]];
@@ -97,7 +99,7 @@ export default abstract class Query<T = object> implements queryInterface<T> {
 			}
 		}
 		
-		return arg1.reduce((prev: any, item) => {
+		return arg1.reduce((prev: any[], item) => {
 			const items = this.buildQueryPart(...item);
 
 			items.forEach((v) => prev.push(v));

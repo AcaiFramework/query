@@ -1,12 +1,13 @@
-sudo: false
-language: node_js
+language: sh
 
-node_js:
-  - 10
+install:
+  - curl -L https://deno.land/x/install/install.sh | sh -s v1.6.0
+  - export PATH="$HOME/.deno/bin:$PATH"
 
 script:
-  - yarn lint
-  - yarn test:cover
+  - deno --version
+  - deno run -A --reload --unstable test.ts --recompile 
 
-notifications:
-  email: false
+cache:
+  directories:
+    - '$HOME/.deno'
