@@ -3,7 +3,7 @@ import GenericModelContent 	from "../../interfaces/ModelContent.ts";
 import QueryPart 			from "../../interfaces/QueryPart.ts";
 import QueryComparison 		from "../../interfaces/QueryComparison.ts";
 
-export default interface AbstractQuery<T = GenericModelContent> {
+export default interface AbstractQuery<T = Record<string,GenericModelContent>> {
 	// -------------------------------------------------
 	// query methods
 	// -------------------------------------------------

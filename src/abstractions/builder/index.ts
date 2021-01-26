@@ -45,7 +45,7 @@ export default abstract class Query<T = Record<string, string | number | boolean
 		
 		query.table(table);
 		
-		return query;
+		return query as queryInterface;
 	}
 
 	// -------------------------------------------------

@@ -48,25 +48,31 @@ class SqlStrategy implements queryStrategy {
 	}
 
 	public async querySelect<T = Record<string, ModelContent>>(table: string, fields?: (keyof T)[], condition?: QueryPart) {
-		const stringcondition = condition && resolveQueryPart(condition);
-		return await this.client.query(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		const stringcondition 	= condition && resolveQueryPart(condition);
+		const query 			= await this.client.query(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+
+		return query.affectedRows;
 	}
 
 	public async queryAdd<T = Record<string, ModelContent>>(table: string, fields: Partial<T>) {
-		return await this.client.query(`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(resolveValueType).join(", ")})`);
+		const query = await this.client.query(`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(resolveValueType).join(", ")})`);
+		
+		return query.affectedRows;
 	}
 
 	public async queryUpdate<T = Record<string, ModelContent>>(table: string, fields: Partial<T>, condition?: QueryPart) {
 		const values 			= Object.keys(fields).map((key) => `${key} = ${resolveValueType(fields[key as keyof Partial<T>])}`);
 		const stringcondition 	= condition && resolveQueryPart(condition);
+		const query				= await this.client.query(`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
-		return await this.client.query(`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		return query.affectedRows;
 	}
 
 	public async queryDelete(table: string, condition?: QueryPart) {
 		const stringcondition 	= condition && resolveQueryPart(condition);
+		const query 			= await this.client.query(`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
-		return await this.client.query(`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		return query.affectedRows;
 	}
 }
 
