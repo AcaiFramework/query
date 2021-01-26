@@ -4,11 +4,12 @@
 import QueryAbstract from '../../../abstractions/builder/index.ts';
 
 // Interfaces
-import ModelContent from "../../../interfaces/ModelContent.ts";
+import SettingsConfigInterface 	from "./types.ts";
 
 // Strategy
 import strategy from './strategy.ts';
 
-export default class PostgresQuery<T = Record<string, ModelContent>> extends QueryAbstract<T> {
+export default class SqlQuery extends QueryAbstract {
 	protected static adapter = new strategy();
+	protected static settings: SettingsConfigInterface;
 }

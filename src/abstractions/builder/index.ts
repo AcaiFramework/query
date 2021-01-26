@@ -7,7 +7,7 @@ import QueryStrategy 							from "../../interfaces/queryStrategy.ts";
 import GenericModelContent, { ModelContent } 	from "../../interfaces/ModelContent.ts";
 import QueryComparison 							from "../../interfaces/QueryComparison.ts";
 
-export default abstract class Query<T = Record<string, string | number | boolean>> implements queryInterface<T> {
+export default abstract class Query implements queryInterface {
 
 	// -------------------------------------------------
 	// properties
@@ -58,7 +58,7 @@ export default abstract class Query<T = Record<string, string | number | boolean
 		return this;
 	}
 
-	public where = (arg1: string | [string, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query<T> => {
+	public where = <ModelConfig = Record<string, string | number | boolean>>(arg1: keyof ModelConfig | [keyof ModelConfig, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("and", subqueries);
 
@@ -66,7 +66,7 @@ export default abstract class Query<T = Record<string, string | number | boolean
 		return this;
 	}
 
-	public orWhere = (arg1: string | [string, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query<T> => {
+	public orWhere = <ModelConfig = Record<string, string | number | boolean>>(arg1: keyof ModelConfig | [keyof ModelConfig, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("or", subqueries);
 
@@ -86,20 +86,20 @@ export default abstract class Query<T = Record<string, string | number | boolean
 	// get methods
 	// -------------------------------------------------
 	
-	public get = async (fields: string[] = ['*']) : Promise<T[]> => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.querySelect<T>(this.tableName, fields, this.queryBuild);
+	public get = async <ModelConfig = Record<string, string | number | boolean>>(fields: string[] = ['*']) : Promise<ModelConfig[]> => {
+		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.querySelect<ModelConfig>(this.tableName, fields, this.queryBuild);
 	}
 
 	// -------------------------------------------------
 	// manipulation methods
 	// -------------------------------------------------
 
-	public insert = async (fields: T) => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.queryAdd<T>(this.tableName, fields);
+	public insert = async <ModelConfig = Record<string, string | number | boolean>>(fields: ModelConfig) => {
+		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.queryAdd<ModelConfig>(this.tableName, fields);
 	}
 
-	public update = async (fields: T) => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.queryUpdate<T>(this.tableName, fields, this.queryBuild);
+	public update = async <ModelConfig = Record<string, string | number | boolean>>(fields: ModelConfig) => {
+		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.queryUpdate<ModelConfig>(this.tableName, fields, this.queryBuild);
 	}
 
 	public delete = async () => {
@@ -124,7 +124,7 @@ export default abstract class Query<T = Record<string, string | number | boolean
 		}
 	}
 
-	private buildQueryPart = (arg1: string | [string, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): [string, string, ModelContent][] => {
+	private buildQueryPart = <ModelConfig = Record<string, string | number | boolean>>(arg1: keyof ModelConfig | [keyof ModelConfig, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): [string, string, ModelContent][] => {
 		if (typeof arg1 === "string") {
 			if (arg3) {
 				return [[arg1, arg2 as string, arg3]];
@@ -134,10 +134,10 @@ export default abstract class Query<T = Record<string, string | number | boolean
 			}
 		}
 		
-		return arg1.reduce((prev: [string, string, ModelContent][], item) => {
+		return (arg1 as unknown as any).reduce((prev: [keyof ModelConfig, QueryComparison, ModelContent][], item: [keyof ModelConfig, QueryComparison, ModelContent]) => {
 			const items = this.buildQueryPart(...item);
 
-			items.forEach((v) => prev.push(v));
+			items.forEach((v) => prev.push(v as unknown as any));
 
 			return prev;
 		}, []);
