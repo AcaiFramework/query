@@ -9,6 +9,6 @@ import ModelContent from "../../../interfaces/ModelContent.ts";
 // Strategy
 import strategy from './strategy.ts';
 
-export default class SqlQuery<T = Record<string, ModelContent>> extends QueryAbstract<T> {
+export default class PostgresQuery<T = Record<string, ModelContent>> extends QueryAbstract<T> {
 	protected static adapter = new strategy();
 }

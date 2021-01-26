@@ -1,11 +1,16 @@
+
 // Interfaces
 import QueryPart 	from "./QueryPart.ts";
 import ModelContent from "./ModelContent.ts";
 
 export default interface QueryStrategy {
-	queryCondition										(query: QueryPart)										: string;
-	querySelect		<T = Record<string, ModelContent>>	(table: string, fields?: string[], condition?: string)	: T[];
-	queryAdd		<T = Record<string, ModelContent>>	(table: string, fields: T)								: T;
-	queryUpdate		<T = Record<string, ModelContent>>	(table: string, fields: T, condition: string)			: T;
-	queryDelete											(table: string, condition: string)						: boolean;
+	// adapter
+	close (): void;
+	build (settings: Record<string, ModelContent>): Promise<void>;
+
+	// query
+	querySelect		<T = Record<string, ModelContent>>	(table: string, fields?: string[], condition?: QueryPart)	: Promise<T[]>;
+	queryAdd		<T = Record<string, ModelContent>>	(table: string, fields: T)									: Promise<string | number>;
+	queryUpdate		<T = Record<string, ModelContent>>	(table: string, fields: Partial<T>, condition: QueryPart)	: Promise<string | number>;
+	queryDelete											(table: string, condition: QueryPart)						: Promise<number>;
 }

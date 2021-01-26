@@ -22,5 +22,8 @@ export default interface AbstractQuery<T = GenericModelContent> {
 	// get methods
 	// -------------------------------------------------
 
-	get (fields: string[]) : T[];
+	get (fields: string[]) : Promise<T[]>;
+	insert (fields: T) : Promise<number | string>;
+	update (fields: Partial<T>) : Promise<number | string>;
+	delete () : Promise<number>;
 }

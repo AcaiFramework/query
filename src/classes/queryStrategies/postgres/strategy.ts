@@ -1,5 +1,5 @@
 // Packages
-import { Client } from "https://deno.land/x/mysql/mod.ts";
+import { Client } from "https://deno.land/x/postgres/mod.ts";
 
 // Interfaces
 import ModelContent 	from "../../../interfaces/ModelContent.ts";
@@ -35,39 +35,46 @@ const resolveQueryPart = (queryBuild: QueryPart) => {
 // Default export
 // -------------------------------------------------
 
-class SqlStrategy implements queryStrategy {
+class PostgresStrategy implements queryStrategy {
 	protected client: Client = {} as Client;
 
 	public async close () {
-		if (this.client && this.client.close) await this.client.close();
+		if (this.client && this.client.end) await this.client.end();
 	}
 
 	public async build (settings: Record<string, unknown>) {
-		if (this.client && this.client.close) await this.client.close();
-		this.client = await new Client().connect(settings);
+		if (this.client && this.client.end) await this.client.end();
+
+		this.client = await new Client(settings);
+		await this.client.connect();
 	}
 
 	public async querySelect<T = Record<string, ModelContent>>(table: string, fields?: (keyof T)[], condition?: QueryPart) {
-		const stringcondition = condition && resolveQueryPart(condition);
-		return await this.client.query(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		const stringcondition 	= condition && resolveQueryPart(condition);
+		const query 			= await this.client.query(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		return query.rows;
 	}
 
 	public async queryAdd<T = Record<string, ModelContent>>(table: string, fields: Partial<T>) {
-		return await this.client.query(`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(resolveValueType).join(", ")})`);
+		const query = await this.client.query(`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(resolveValueType).join(", ")})`);
+
+		return query.rowCount as number;
 	}
 
 	public async queryUpdate<T = Record<string, ModelContent>>(table: string, fields: Partial<T>, condition?: QueryPart) {
 		const values 			= Object.keys(fields).map((key) => `${key} = ${resolveValueType(fields[key as keyof Partial<T>])}`);
 		const stringcondition 	= condition && resolveQueryPart(condition);
+		const query 			= await this.client.query(`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
-		return await this.client.query(`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		return query.rowCount as number;
 	}
 
 	public async queryDelete(table: string, condition?: QueryPart) {
 		const stringcondition 	= condition && resolveQueryPart(condition);
+		const query 			= await this.client.query(`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
-		return await this.client.query(`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		return query.rowCount as number;
 	}
 }
 
-export default SqlStrategy;
+export default PostgresStrategy;
