@@ -5,6 +5,12 @@
 # Açaí's Framework query builder
 A simple modular, scalable query builder that let you toggle strategies to easily, used and created by Açaí Framework.
 
+## Supports
+- [x] MySQL
+- [x] PostgreSQL
+- [ ] mongo
+- [ ] sqlite
+
 ## Installation
 npm
 ```
