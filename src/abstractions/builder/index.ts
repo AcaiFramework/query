@@ -58,7 +58,7 @@ export default abstract class Query implements queryInterface {
 		return this;
 	}
 
-	public where = <ModelConfig = Record<string, string | number | boolean>>(arg1: keyof ModelConfig | [keyof ModelConfig, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query => {
+	public where = (arg1: string | [string, QueryComparison, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("and", subqueries);
 
@@ -66,7 +66,7 @@ export default abstract class Query implements queryInterface {
 		return this;
 	}
 
-	public orWhere = <ModelConfig = Record<string, string | number | boolean>>(arg1: keyof ModelConfig | [keyof ModelConfig, QueryComparison | GenericModelContent, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query => {
+	public orWhere = (arg1: string | [string, QueryComparison, GenericModelContent?][], arg2?: QueryComparison | GenericModelContent, arg3?: GenericModelContent): Query => {
 		const subqueries = this.buildQueryPart(arg1, arg2, arg3);
 		this.push("or", subqueries);
 
@@ -86,7 +86,7 @@ export default abstract class Query implements queryInterface {
 	// get methods
 	// -------------------------------------------------
 	
-	public get = async <ModelConfig = Record<string, string | number | boolean>>(fields: string[] = ['*']) : Promise<ModelConfig[]> => {
+	public get = async <ModelConfig = Record<string, string | number | boolean>>(fields: (keyof ModelConfig | "*")[] = ['*']) : Promise<ModelConfig[]> => {
 		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.querySelect<ModelConfig>(this.tableName, fields, this.queryBuild);
 	}
 

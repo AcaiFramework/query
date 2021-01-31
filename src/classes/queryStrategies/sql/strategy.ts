@@ -1,5 +1,5 @@
 // Packages
-import { Client } from "https://deno.land/x/mysql/mod.ts";
+import { Client } from "https://deno.land/x/mysql@v2.7.0/mod.ts";
 
 // Interfaces
 import ModelContent 	from "../../../interfaces/ModelContent.ts";
@@ -51,7 +51,7 @@ class SqlStrategy implements queryStrategy {
 		const stringcondition 	= condition && resolveQueryPart(condition);
 		const query 			= await this.client.query(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
-		return query.affectedRows;
+		return query;
 	}
 
 	public async queryAdd<T = Record<string, ModelContent>>(table: string, fields: Partial<T>) {

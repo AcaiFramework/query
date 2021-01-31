@@ -9,8 +9,8 @@ export default interface QueryStrategy {
 	build (settings: Record<string, ModelContent>): Promise<void>;
 
 	// query
-	querySelect		<T = Record<string, ModelContent>>	(table: string, fields?: string[], condition?: QueryPart)	: Promise<T[]>;
-	queryAdd		<T = Record<string, ModelContent>>	(table: string, fields: T)									: Promise<string | number>;
-	queryUpdate		<T = Record<string, ModelContent>>	(table: string, fields: Partial<T>, condition: QueryPart)	: Promise<string | number>;
-	queryDelete											(table: string, condition: QueryPart)						: Promise<number>;
+	querySelect		<T = Record<string, ModelContent>>	(table: string, fields?: (keyof T | "*")[], condition?: QueryPart)	: Promise<T[]>;
+	queryAdd		<T = Record<string, ModelContent>>	(table: string, fields: T)											: Promise<string | number>;
+	queryUpdate		<T = Record<string, ModelContent>>	(table: string, fields: Partial<T>, condition: QueryPart)			: Promise<string | number>;
+	queryDelete											(table: string, condition: QueryPart)								: Promise<number>;
 }

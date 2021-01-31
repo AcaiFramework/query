@@ -1,5 +1,5 @@
 // Packages
-import { Client } from "https://deno.land/x/postgres/mod.ts";
+import { Client } from "https://deno.land/x/postgres@v0.7.0/mod.ts";
 
 // Interfaces
 import ModelContent 	from "../../../interfaces/ModelContent.ts";
@@ -51,12 +51,12 @@ class PostgresStrategy implements queryStrategy {
 
 	public async querySelect<T = Record<string, ModelContent>>(table: string, fields?: (keyof T)[], condition?: QueryPart) {
 		const stringcondition 	= condition && resolveQueryPart(condition);
-		const query 			= await this.client.query(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
-		return query.rows;
+		const query 			= await this.client.queryObject(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		return query.rows as T[];
 	}
 
 	public async queryAdd<T = Record<string, ModelContent>>(table: string, fields: Partial<T>) {
-		const query = await this.client.query(`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(resolveValueType).join(", ")})`);
+		const query = await this.client.queryObject(`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(resolveValueType).join(", ")})`);
 
 		return query.rowCount as number;
 	}
@@ -64,14 +64,14 @@ class PostgresStrategy implements queryStrategy {
 	public async queryUpdate<T = Record<string, ModelContent>>(table: string, fields: Partial<T>, condition?: QueryPart) {
 		const values 			= Object.keys(fields).map((key) => `${key} = ${resolveValueType(fields[key as keyof Partial<T>])}`);
 		const stringcondition 	= condition && resolveQueryPart(condition);
-		const query 			= await this.client.query(`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		const query 			= await this.client.queryObject(`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
 		return query.rowCount as number;
 	}
 
 	public async queryDelete(table: string, condition?: QueryPart) {
 		const stringcondition 	= condition && resolveQueryPart(condition);
-		const query 			= await this.client.query(`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		const query 			= await this.client.queryObject(`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
 		return query.rowCount as number;
 	}
