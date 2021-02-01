@@ -27,20 +27,20 @@ yarn add @acai/query
 The first thing you are going to need is setup your query, you can easily define your default query or just setup one as follows:
 
 ``` typescript
-import query, { setDefault, SqlQuery } 	from "query/mod.ts";
+import query, { setDefault, addQuery } 	from "query/mod.ts";
 
-// setup specifically the sql query
-await SqlQuery.toggleSettings({
-	/* Your settings here */
-});
+// Add query of sql type
+await addQuery("secondary", "sql", { /* sql config */ });
+const sqlquery = query("secondary");
 
 // or setup a default query so you can easily import
 await setDefaultQuery("pg", {
 	/* Optional sql query settings, if you want to pass any */
 });
 
-// now every time you call query, it will provide the postgreSQL to you
-const q = query(); // <-- this is a postgreSQL query builder
+// now every time you call query without arguments, it will look for the default query
+const pgquery = query(); // <-- this is a postgreSQL query builder
+
 ```
 
 ### Querying
