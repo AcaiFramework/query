@@ -9,7 +9,7 @@ import SettingsConfigInterface 	from "./types.ts";
 // Strategy
 import strategy from './strategy.ts';
 
-export default class SqlQuery extends QueryAbstract {
+export default class PostgreSqlQuery extends QueryAbstract {
 	protected static adapter = new strategy();
 	protected static settings: SettingsConfigInterface;
 }

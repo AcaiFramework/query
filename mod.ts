@@ -13,23 +13,30 @@ import ModelContent from "./src/interfaces/ModelContent.ts";
 // Configurations
 // -------------------------------------------------
 
-let standard!: typeof AbstractQuery;
+const queries = {} as Record<string, typeof AbstractQuery>;
 
-export async function setDefault(name:string, config?: Record<string, ModelContent>) {
-	switch (name) {
+export async function addQuery (name: string, type: string, config?: Record<string, ModelContent>) {
+	switch (type) {
 		case "sql":
-			standard = SqlQuery;
+		case "mysql":
+		case "mysqli":
+			queries[name] = SqlQuery;
 		break;
+
 		case "pg":
 		case "postgres":
 		case "postgresql":
-			standard = PostgresQuery;
+			queries[name] = PostgresQuery;
 		break;
 	}
 
-	if (standard && config) {
-		await standard.toggleSettings(config);
+	if (config) {
+		await queries[name].toggleSettings(config);
 	}
+}
+
+export async function setDefault(name:string, config?: Record<string, ModelContent>) {
+	await addQuery("default", name, config);
 }
 
 // -------------------------------------------------
@@ -44,4 +51,4 @@ export {default as SqlQuery} 		from './src/classes/queryStrategies/sql/index.ts'
 export {default as PostgresQuery} 	from './src/classes/queryStrategies/postgres/index.ts';
 
 // default query
-export default () => standard;
+export default (key?: string) => queries[key || "default"];
