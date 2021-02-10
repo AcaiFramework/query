@@ -1,11 +1,9 @@
-// deno-lint-ignore-file
-
 // Interfaces
-import queryInterface 							from "./interface.ts";
-import QueryPart 								from "../../interfaces/QueryPart.ts";
-import QueryStrategy 							from "../../interfaces/queryStrategy.ts";
-import GenericModelContent, { ModelContent } 	from "../../interfaces/ModelContent.ts";
-import QueryComparison 							from "../../interfaces/QueryComparison.ts";
+import queryInterface 							from "./interface";
+import QueryPart 								from "../../interfaces/QueryPart";
+import QueryStrategy 							from "../../interfaces/queryStrategy";
+import GenericModelContent, { ModelContent } 	from "../../interfaces/ModelContent";
+import QueryComparison 							from "../../interfaces/QueryComparison";
 
 export default abstract class Query implements queryInterface {
 
@@ -74,18 +72,35 @@ export default abstract class Query implements queryInterface {
 		return this;
 	}
 
+	public raw = async (query: string) => {
+		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.raw(query);
+	}
+
 	// -------------------------------------------------
 	// debug methods
 	// -------------------------------------------------
 
-	public raw = () => {
+	public rawQueryObject = () => {
 		return this.queryBuild;
+	}
+
+	// -------------------------------------------------
+	// table methods
+	// -------------------------------------------------
+	
+	public getColumns = async <ModelConfig = Record<string, string | number | boolean>>(fields: (keyof ModelConfig | "*")[] = ['*']) => {
+		const result = await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.getColumns<ModelConfig>(this.tableName, fields);
+		return result.map(i => ({...i}));
 	}
 
 	// -------------------------------------------------
 	// get methods
 	// -------------------------------------------------
-	
+
+	public first = async <ModelConfig = Record<string, string | number | boolean>>(fields: (keyof ModelConfig | "*")[] = ['*']) : Promise<ModelConfig[]> => {
+		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.querySelect<ModelConfig>(this.tableName, fields, this.queryBuild)[0];
+	}
+
 	public get = async <ModelConfig = Record<string, string | number | boolean>>(fields: (keyof ModelConfig | "*")[] = ['*']) : Promise<ModelConfig[]> => {
 		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.querySelect<ModelConfig>(this.tableName, fields, this.queryBuild);
 	}

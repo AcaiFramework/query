@@ -7,7 +7,7 @@ A simple modular, scalable query builder that let you toggle strategies to easil
 
 ## Supports
 - [x] MySQL
-- [x] PostgreSQL
+- [ ] PostgreSQL
 - [ ] mongo
 - [ ] sqlite
 

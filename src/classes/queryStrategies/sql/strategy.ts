@@ -1,78 +1,152 @@
 // Packages
-import { Client } from "https://deno.land/x/mysql@v2.7.0/mod.ts";
+import * as Client from "mysql";
 
 // Interfaces
-import ModelContent 	from "../../../interfaces/ModelContent.ts";
-import QueryPart 		from "../../../interfaces/QueryPart.ts";
-import queryStrategy 	from "../../../interfaces/queryStrategy.ts";
+import ModelContent 	from "../../../interfaces/ModelContent";
+import QueryPart 		from "../../../interfaces/QueryPart";
+import queryStrategy 	from "../../../interfaces/queryStrategy";
+import ColumnOptions 	from "../../../interfaces/ColumnOptions";
 
-// -------------------------------------------------
 // Helpers
-// -------------------------------------------------
-
-const resolveValueType = (value: unknown) => {
-	return typeof value === "number" ? value:`'${value}'`;
-}
-
-const resolveQueryPart = (queryBuild: QueryPart) => {
-	const parts = queryBuild.logic.map((item) => {
-		const subparts = (item as QueryPart).logic.map((subitem) => {
-			if ((subitem as QueryPart).type) {
-				return `(${resolveQueryPart(subitem as QueryPart)})`;
-			}
-			
-			const arrayitem = subitem as [string, string, ModelContent];
-			return `${arrayitem[0]} ${arrayitem[1]} ${resolveValueType(arrayitem[2])}`;
-		});
-
-		return subparts.join(` ${(item as QueryPart).type === "and" ? 'AND':"OR"} `);
-	}) as string[];
-
-	return parts.join(` ${queryBuild.type === "and" ? 'AND':"OR"} `);
-}
-
-// -------------------------------------------------
-// Default export
-// -------------------------------------------------
+import { columnSerialize, queryResolver, resolveQueryPart } from "./helpers";
 
 class SqlStrategy implements queryStrategy {
-	protected client: Client = {} as Client;
+	// -------------------------------------------------
+	// Properties
+	// -------------------------------------------------
+
+	protected client: Client.Connection = {} as Client.Connection;
+
+	// -------------------------------------------------
+	// Client methods
+	// -------------------------------------------------
 
 	public async close () {
-		if (this.client && this.client.close) await this.client.close();
+		if (this.client && this.client.end) await this.client.end();
 	}
 
 	public async build (settings: Record<string, unknown>) {
-		if (this.client && this.client.close) await this.client.close();
-		this.client = await new Client().connect(settings);
+		await this.close();
+		this.client = await Client.createConnection(settings);
+		await this.client.connect();
 	}
+
+	// -------------------------------------------------
+	// Main methods
+	// -------------------------------------------------
+
+	public async raw (query: string) {
+		return await queryResolver(this.client, query);
+	}
+
+	// -------------------------------------------------
+	// Table methods
+	// -------------------------------------------------
+
+	public async getColumns<T = Record<string, ModelContent>> (table: string, fields?: (keyof T)[]) {
+		const response = (await queryResolver(
+			this.client,
+			`SHOW COLUMNS FROM ${table}`,
+		));
+
+		if (fields)
+			return response.filter(i => fields.find(x => x === i.Field));
+		else
+			return response;
+	}
+
+	public async createTable<T = Record<string, ModelContent>> (table: string, fields: Record<keyof T, ColumnOptions>) {
+		await queryResolver(
+			this.client,
+			`CREATE TABLE ${table} (${
+				Object.keys(fields).map(key => {
+					return columnSerialize(key, fields[key]);
+				}).join(", ")
+			})`,
+		);
+
+		return true;
+	}
+
+	public async alterTable<T = Record<string, ModelContent>> (table: string, fields: Record<keyof T, ColumnOptions>) {
+		await queryResolver(
+			this.client,
+			`ALTER TABLE IF EXISTS ${table} (${
+				Object.keys(fields).map(key => {
+					return columnSerialize(key, fields[key]);
+				}).join(", ")
+			})`,
+		);
+
+		return true;
+	}
+
+	public async dropTable (table: string) {
+		await queryResolver(
+			this.client,
+			`DROP TABLE IF EXISTS ${table}`,
+		);
+
+		return true;
+	}
+
+	// -------------------------------------------------
+	// CRUD methods
+	// -------------------------------------------------
 
 	public async querySelect<T = Record<string, ModelContent>>(table: string, fields?: (keyof T)[], condition?: QueryPart) {
 		const stringcondition 	= condition && resolveQueryPart(condition);
-		const query 			= await this.client.query(`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
 
-		return query;
+		return await queryResolver(
+			this.client,
+			`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition[0]}`:''}`,
+			stringcondition && stringcondition[1]
+		);
 	}
 
-	public async queryAdd<T = Record<string, ModelContent>>(table: string, fields: Partial<T>) {
-		const query = await this.client.query(`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(resolveValueType).join(", ")})`);
-		
-		return query.affectedRows;
+	public async queryAdd<T = Record<string, ModelContent>>(table: string, fields: Partial<T>) {		
+		const response = await queryResolver(
+			this.client,
+			`INSERT INTO ${table}(${Object.keys(fields).join(", ")}) VALUES (${Object.values(fields).map(() => "?").join(", ")})`,
+			Object.values(fields),
+		);
+
+		const primaryKey = (await this.getColumns(table)).find(i => i.Key === "PRI");
+
+		return {...(await this.querySelect(table, undefined, {
+			type: "or",
+			logic: [
+				{
+					type: "and",
+					logic: [
+						[primaryKey.Field, '=', response.insertId],
+					],
+				},
+			],
+		}))[0]};
 	}
 
 	public async queryUpdate<T = Record<string, ModelContent>>(table: string, fields: Partial<T>, condition?: QueryPart) {
-		const values 			= Object.keys(fields).map((key) => `${key} = ${resolveValueType(fields[key as keyof Partial<T>])}`);
+		const values 			= Object.keys(fields).map((key) => `${key} = ?`);
 		const stringcondition 	= condition && resolveQueryPart(condition);
-		const query				= await this.client.query(`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		const query				= await queryResolver(
+			this.client,
+			`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition[0]}`:''}`,
+			[...Object.values(fields), ...((stringcondition && stringcondition[1]) || [])],
+		);
 
 		return query.affectedRows;
 	}
 
 	public async queryDelete(table: string, condition?: QueryPart) {
 		const stringcondition 	= condition && resolveQueryPart(condition);
-		const query 			= await this.client.query(`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition}`:''}`);
+		const query				= await queryResolver(
+			this.client,
+			`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition[0]}`:''}`,
+			(stringcondition && stringcondition[1]),
+		);
 
-		return query.affectedRows;
+		return query as any;
 	}
 }
 

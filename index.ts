@@ -2,12 +2,12 @@
 // Imports
 // -------------------------------------------------
 
-import AbstractQuery 	from "./src/abstractions/builder/index.ts";
-import SqlQuery 		from './src/classes/queryStrategies/sql/index.ts';
-import PostgresQuery 	from './src/classes/queryStrategies/postgres/index.ts';
+import AbstractQuery 	from "./src/abstractions/builder/index";
+import SqlQuery 		from './src/classes/queryStrategies/sql/index';
+import PostgresQuery 	from './src/classes/queryStrategies/postgres/index';
 
 // interfaces
-import ModelContent from "./src/interfaces/ModelContent.ts";
+import ModelContent from "./src/interfaces/ModelContent";
 
 // -------------------------------------------------
 // Configurations
@@ -44,11 +44,11 @@ export async function setDefault(name:string, config?: Record<string, ModelConte
 // -------------------------------------------------
 
 // Base abstract query
-export {default as AbstractQuery} from './src/abstractions/builder/index.ts';
+export {default as AbstractQuery} from './src/abstractions/builder/index';
 
 // Implementations
-export {default as SqlQuery} 		from './src/classes/queryStrategies/sql/index.ts';
-export {default as PostgresQuery} 	from './src/classes/queryStrategies/postgres/index.ts';
+export {default as SqlQuery} 		from './src/classes/queryStrategies/sql/index';
+export {default as PostgresQuery} 	from './src/classes/queryStrategies/postgres/index';
 
 // default query
 export default (key?: string) => queries[key || "default"];

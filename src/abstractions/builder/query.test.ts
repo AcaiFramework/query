@@ -1,11 +1,11 @@
 // Packages
-import test from "https://deno.land/x/acai_testing@1.0.8hotfix/mod.ts";
+import test from "@acai/testing";
 
 // Abstractions
-import AbstractQuery from './index.ts';
+import AbstractQuery from './index';
 
 // Strategies
-import sql from '../../classes/queryStrategies/sql/strategy.ts';
+import sql from '../../classes/queryStrategies/sql/strategy';
 
 // Create concrete class based on sql
 class Query extends AbstractQuery {

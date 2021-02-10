@@ -1,13 +1,11 @@
-
-
 // Abstractions
-import QueryAbstract from '../../../abstractions/builder/index.ts';
+import QueryAbstract from '../../../abstractions/builder/index';
 
 // Interfaces
-import SettingsConfigInterface 	from "./types.ts";
+import SettingsConfigInterface 	from "./types";
 
 // Strategy
-import strategy from './strategy.ts';
+import strategy from './strategy';
 
 export default class SqlQuery extends QueryAbstract {
 	protected static adapter = new strategy();

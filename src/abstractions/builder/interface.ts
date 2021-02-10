@@ -1,7 +1,7 @@
 // Interfaces
-import GenericModelContent 	from "../../interfaces/ModelContent.ts";
-import QueryPart 			from "../../interfaces/QueryPart.ts";
-import QueryComparison 		from "../../interfaces/QueryComparison.ts";
+import GenericModelContent 	from "../../interfaces/ModelContent";
+import QueryPart 			from "../../interfaces/QueryPart";
+import QueryComparison 		from "../../interfaces/QueryComparison";
 
 export default interface AbstractQuery {
 	// -------------------------------------------------
@@ -16,10 +16,17 @@ export default interface AbstractQuery {
 	// -------------------------------------------------
 
 	toString (): string;
-	raw (): QueryPart;
+	rawQueryObject (): QueryPart;
 
 	// -------------------------------------------------
-	// get methods
+	// data methods
+	// -------------------------------------------------
+
+	raw (query: string): any;
+	getColumns <ModelConfig = Record<string, string | number | boolean>> (fields?: (keyof ModelConfig | "*")[]) : Promise<Record<string, string | number>[]>;
+
+	// -------------------------------------------------
+	// crud methods
 	// -------------------------------------------------
 
 	get <ModelConfig = Record<string, string | number | boolean>> (fields?: (keyof ModelConfig | "*")[]) : Promise<ModelConfig[]>;

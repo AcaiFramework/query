@@ -1,5 +1,9 @@
 // Packages
-import test from "https://deno.land/x/acai_testing@1.0.8hotfix/mod.ts";
+import test from "@acai/testing";
 
-await test.find(/\S\.(test|tests)\.(js|ts)$/);
-await test.run();
+async function main () {
+	await test.find("**/*.test.ts");
+	await test.run();
+}
+  
+main();
