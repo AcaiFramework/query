@@ -159,8 +159,8 @@ export default abstract class Query implements queryInterface {
 		return await this.getAdapter().raw(query);
 	}
 
-	public count = async (column: string) => {
-		return await this.getAdapter().count(this.tableName, column);
+	public count = async (column?: string) => {
+		return await this.getAdapter().count(this.tableName, column || "*");
 	}
 
 	public avg = async (column: string) => {
@@ -235,6 +235,8 @@ export default abstract class Query implements queryInterface {
 	}
 
 	public paginate = async <ModelConfig = Record<string, ModelContent>>(page?: number, perPage: number = 25) : Promise<PaginatedResponse<ModelConfig>> => {
+		const total = await this.getAdapter().count(this.tableName, "*", this.queryBuild.logic.length > 0 ? this.queryBuild:undefined);
+		
 		const entries = await this.getAdapter().querySelect<ModelConfig>(
 			this.tableName,
 			this.fieldsList as (keyof ModelConfig | "*")[],
@@ -251,8 +253,8 @@ export default abstract class Query implements queryInterface {
 			page: page || 1,
 			perPage,
 
-			totalItems: 1,
-			totalPages: 1,
+			totalItems: total,
+			totalPages: Math.ceil(total / perPage),
 		};
 	}
 

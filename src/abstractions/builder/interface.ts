@@ -41,7 +41,7 @@ export default interface AbstractQuery {
 	raw (query: string): any;
 	avg (columnName: string): Promise<number>;
 	sum (columnName: string): Promise<number>;
-	count (columnName: string): Promise<number>;
+	count (columnName?: string): Promise<number>;
 	getColumns <ModelConfig = Record<string, ModelContent>> (fields?: (keyof ModelConfig | "*")[]) : Promise<Record<string, string | number>[]>;
 
 	// -------------------------------------------------
