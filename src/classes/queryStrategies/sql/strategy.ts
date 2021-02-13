@@ -2,13 +2,14 @@
 import * as Client from "mysql";
 
 // Interfaces
-import ModelContent 	from "../../../interfaces/ModelContent";
-import QueryPart 		from "../../../interfaces/QueryPart";
-import queryStrategy 	from "../../../interfaces/queryStrategy";
-import ColumnOptions 	from "../../../interfaces/ColumnOptions";
+import ModelContent 		from "../../../interfaces/ModelContent";
+import QueryPart 			from "../../../interfaces/QueryPart";
+import queryStrategy 		from "../../../interfaces/queryStrategy";
+import ColumnOptions 		from "../../../interfaces/ColumnOptions";
+import JoinClauseInterface 	from "../../../interfaces/JoinClause";
 
 // Helpers
-import { columnSerialize, queryResolver, resolveQueryPart } from "./helpers";
+import { columnSerialize, joinClauseBuilder, queryResolver, resolveQueryPart } from "./helpers";
 
 class SqlStrategy implements queryStrategy {
 	// -------------------------------------------------
@@ -32,11 +33,38 @@ class SqlStrategy implements queryStrategy {
 	}
 
 	// -------------------------------------------------
-	// Main methods
+	// Data methods
 	// -------------------------------------------------
 
 	public async raw (query: string) {
 		return await queryResolver(this.client, query);
+	}
+
+	public async sum (table: string, column: string, condition?: QueryPart) {
+		const stringcondition = condition && resolveQueryPart(condition);
+		
+		return await queryResolver(
+			this.client,
+			`SELECT SUM(${column}) FROM ${table}${ stringcondition ? ` WHERE ${stringcondition[0]}`:'' }`,
+		);
+	}
+
+	public async avg (table: string, column: string, condition?: QueryPart) {
+		const stringcondition = condition && resolveQueryPart(condition);
+		
+		return await queryResolver(
+			this.client,
+			`SELECT AVG(${column}) FROM ${table}${ stringcondition ? ` WHERE ${stringcondition[0]}`:'' }`,
+		);
+	}
+
+	public async count (table: string, column: string, condition?: QueryPart) {
+		const stringcondition = condition && resolveQueryPart(condition);
+		
+		return await queryResolver(
+			this.client,
+			`SELECT COUNT(${column}) FROM ${table}${ stringcondition ? ` WHERE ${stringcondition[0]}`:'' }`,
+		);
 	}
 
 	// -------------------------------------------------
@@ -59,9 +87,7 @@ class SqlStrategy implements queryStrategy {
 		await queryResolver(
 			this.client,
 			`CREATE TABLE ${table} (${
-				Object.keys(fields).map(key => {
-					return columnSerialize(key, fields[key]);
-				}).join(", ")
+				Object.keys(fields).map(key => columnSerialize(key, fields[key])).join(", ")
 			})`,
 		);
 
@@ -72,9 +98,7 @@ class SqlStrategy implements queryStrategy {
 		await queryResolver(
 			this.client,
 			`ALTER TABLE IF EXISTS ${table} (${
-				Object.keys(fields).map(key => {
-					return columnSerialize(key, fields[key]);
-				}).join(", ")
+				Object.keys(fields).map(key => columnSerialize(key, fields[key])).join(", ")
 			})`,
 		);
 
@@ -94,12 +118,26 @@ class SqlStrategy implements queryStrategy {
 	// CRUD methods
 	// -------------------------------------------------
 
-	public async querySelect<T = Record<string, ModelContent>>(table: string, fields?: (keyof T)[], condition?: QueryPart) {
+	public async querySelect<T = Record<string, ModelContent>>(table: string, fields?: (keyof T)[], condition?: QueryPart, limit?: number, offset?: number, orderBy?: {order?: "ASC" | "DESC", by: string}, joinClause?: JoinClauseInterface, groupBy?: string) {
 		const stringcondition 	= condition && resolveQueryPart(condition);
 
 		return await queryResolver(
 			this.client,
-			`SELECT ${fields ? fields.join(", "):"*"} FROM ${table}${stringcondition ? ` WHERE ${stringcondition[0]}`:''}`,
+			`SELECT ${
+				(fields && fields.length > 0) ? fields.join(", "):"*"
+			} FROM ${
+				table
+			}${
+				stringcondition ? ` WHERE ${stringcondition[0]}`:''
+			}${
+				limit ? ` LIMIT ${limit}`:""
+			}${ offset ? ` OFFSET ${offset}`:""}${
+				joinClause ? joinClauseBuilder(joinClause):""
+			}${
+				groupBy ? ` GROUP BY ${groupBy}`:""
+			}${
+				orderBy ? ` ORDER BY ${orderBy.by} ${orderBy.order || "ASC"}`:""
+			}`,
 			stringcondition && stringcondition[1]
 		);
 	}

@@ -8,7 +8,7 @@ async function main () {
 		password	: "",
 	});
 
-	console.log(await SqlQuery.table("core_schema").where("id", 33).update({name: "Hi"}));
+	console.log(await SqlQuery.table("core_schema").paginate());
 
 	await SqlQuery.close();
 }

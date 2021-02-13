@@ -1,10 +1,11 @@
 // Packages
 import * as Client from "mysql";
-import ColumnOptions from "../../../interfaces/ColumnOptions";
 
 // Interfaces
-import ModelContent 	from "../../../interfaces/ModelContent";
-import QueryPart 		from "../../../interfaces/QueryPart";
+import ModelContent 		from "../../../interfaces/ModelContent";
+import QueryPart 			from "../../../interfaces/QueryPart";
+import JoinClauseInterface 	from "../../../interfaces/JoinClause";
+import ColumnOptions 		from "../../../interfaces/ColumnOptions";
 
 export const resolveQueryPart = (queryBuild: QueryPart) => {
 	const values = [] as unknown[];
@@ -26,6 +27,7 @@ export const resolveQueryPart = (queryBuild: QueryPart) => {
 }
 
 export const queryResolver = (client: Client.Connection, queryString: string, params: unknown[] = []): Promise<any> => {
+	console.log(queryString);
 	return new Promise((resolve, reject) => {
 		client.query(queryString, params,
 		(error, results) => {
@@ -39,3 +41,15 @@ export const queryResolver = (client: Client.Connection, queryString: string, pa
 export const columnSerialize = (key: string, data: ColumnOptions) => {
 
 }
+
+const types = {
+	"inner": "INNER",
+	"left": "LEFT",
+	"right": "RIGHT",
+	"outer": "FULL OUTER"
+};
+export const joinClauseBuilder = (joinClause: JoinClauseInterface) => {
+	const type = types[joinClause.type];
+
+	return `${type} JOIN ${joinClause.table} ON ${joinClause.firstColumn}${joinClause.operator}${joinClause.secondColumn}`;
+} 

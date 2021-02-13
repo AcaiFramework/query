@@ -4,6 +4,8 @@ import QueryPart 								from "../../interfaces/QueryPart";
 import QueryStrategy 							from "../../interfaces/queryStrategy";
 import GenericModelContent, { ModelContent } 	from "../../interfaces/ModelContent";
 import QueryComparison 							from "../../interfaces/QueryComparison";
+import PaginatedResponse 						from "../../interfaces/PaginatedResponse";
+import JoinClauseInterface 						from "../../interfaces/JoinClause";
 
 export default abstract class Query implements queryInterface {
 
@@ -12,7 +14,13 @@ export default abstract class Query implements queryInterface {
 	// -------------------------------------------------
 
 	protected tableName 			= '';
-	protected queryBuild: QueryPart = {type:"or", logic:[]};
+	protected queryBuild	 : QueryPart = {type:"or", logic:[]};
+	protected orderByQuery  ?: {order?: "ASC" | "DESC", by: string};
+	protected offsetQuantity?: number;
+	protected limitQuantity ?: number;
+	protected fieldsList	?: string[] = [];
+	protected joinList		?: JoinClauseInterface;
+	protected groupByColumn ?: string;
 
 	protected static adapter: QueryStrategy;
 	protected static settings: Record<string, ModelContent>;
@@ -72,8 +80,95 @@ export default abstract class Query implements queryInterface {
 		return this;
 	}
 
+	public orderBy = (by: string, order?: "ASC" | "DESC") => {
+		this.orderByQuery = {order, by};
+
+		return this;
+	}
+
+	public offset = (quantity: number, limit?: number) => {
+		this.offsetQuantity 			= quantity;
+		if (limit) this.limitQuantity 	= limit;
+
+		return this;
+	}
+
+	public limit = (quantity: number) => {
+		this.limitQuantity 	= quantity;
+
+		return this;
+	}
+
+	public groupBy = (column: string) => {
+		this.groupByColumn 	= column;
+
+		return this;
+	}
+
+	public fields = <ModelConfig = Record<string, ModelContent>>(fields: (keyof ModelConfig | "*")[]) => {
+		this.fieldsList = fields as string[];
+
+		return this;
+	}
+
+	// -------------------------------------------------
+	// join methods
+	// -------------------------------------------------
+
+	public joinType (type: "inner" | "left" | "right" | "outer", table: string, firstColumn: string, secondColumnOrOperator: string | "=" | "!=" | ">" | "<", secondColumn?: string) {
+		this.joinList = {
+			type,
+			table,
+			firstColumn,
+			secondColumn: secondColumn || secondColumnOrOperator,
+			operator: secondColumn ? secondColumnOrOperator : "=",
+		};
+
+		return this;
+	}
+
+	public join (table: string, firstColumn: string, secondColumnOrOperator: string | "=" | "!=" | ">" | "<", secondColumn?: string) {
+		this.joinType("outer", table, firstColumn, secondColumnOrOperator, secondColumn);
+
+		return this;
+	}
+
+	public leftJoin (table: string, firstColumn: string, secondColumnOrOperator: string | "=" | "!=" | ">" | "<", secondColumn?: string) {
+		this.joinType("left", table, firstColumn, secondColumnOrOperator, secondColumn);
+
+		return this;
+	}
+
+	public rightJoin (table: string, firstColumn: string, secondColumnOrOperator: string | "=" | "!=" | ">" | "<", secondColumn?: string) {
+		this.joinType("right", table, firstColumn, secondColumnOrOperator, secondColumn);
+
+		return this;
+	}
+
+	public innerJoin (table: string, firstColumn: string, secondColumnOrOperator: string | "=" | "!=" | ">" | "<", secondColumn?: string) {
+		this.joinType("inner", table, firstColumn, secondColumnOrOperator, secondColumn);
+
+		return this;
+	}
+
+	// -------------------------------------------------
+	// data methods
+	// -------------------------------------------------
+
 	public raw = async (query: string) => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.raw(query);
+		return await this.getAdapter().raw(query);
+	}
+
+	public count = async (column: string) => {
+		return await this.getAdapter().count(this.tableName, column);
+	}
+
+	public avg = async (column: string) => {
+		return await this.getAdapter().avg(this.tableName, column);
+	}
+
+	public sum = async (column: string) => {
+		return await this.getAdapter().sum(this.tableName, column);
 	}
 
 	// -------------------------------------------------
@@ -88,8 +183,8 @@ export default abstract class Query implements queryInterface {
 	// table methods
 	// -------------------------------------------------
 	
-	public getColumns = async <ModelConfig = Record<string, string | number | boolean>>(fields: (keyof ModelConfig | "*")[] = ['*']) => {
-		const result = await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.getColumns<ModelConfig>(this.tableName, fields);
+	public getColumns = async <ModelConfig = Record<string, ModelContent>>(fields: (keyof ModelConfig | "*")[] = ['*']) => {
+		const result = await this.getAdapter().getColumns<ModelConfig>(this.tableName, fields);
 		return result.map(i => ({...i}));
 	}
 
@@ -97,33 +192,93 @@ export default abstract class Query implements queryInterface {
 	// get methods
 	// -------------------------------------------------
 
-	public first = async <ModelConfig = Record<string, string | number | boolean>>(fields: (keyof ModelConfig | "*")[] = ['*']) : Promise<ModelConfig[]> => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.querySelect<ModelConfig>(this.tableName, fields, this.queryBuild)[0];
+	public first = async <ModelConfig = Record<string, ModelContent>>(fields: (keyof ModelConfig | "*")[] = ['*']) : Promise<ModelConfig> => {
+		return await this.getAdapter().querySelect<ModelConfig>(
+			this.tableName,
+			fields,
+			this.queryBuild.logic.length > 0 ? this.queryBuild:undefined,
+			1,
+			0,
+			{
+				order: "ASC",
+				by: this.orderByQuery?.by || "id",
+			},
+			this.joinList,
+		)[0];
 	}
 
-	public get = async <ModelConfig = Record<string, string | number | boolean>>(fields: (keyof ModelConfig | "*")[] = ['*']) : Promise<ModelConfig[]> => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.querySelect<ModelConfig>(this.tableName, fields, this.queryBuild);
+	public last = async <ModelConfig = Record<string, ModelContent>>(fields: (keyof ModelConfig | "*")[] = ['*']) : Promise<ModelConfig> => {
+		return await this.getAdapter().querySelect<ModelConfig>(
+			this.tableName,
+			fields,
+			this.queryBuild.logic.length > 0 ? this.queryBuild:undefined,
+			1,
+			0,
+			{
+				order: "DESC",
+				by: this.orderByQuery?.by || "id",
+			},
+			this.joinList,
+		)[0];
+	}
+
+	public get = async <ModelConfig = Record<string, ModelContent>>(fields?: (keyof ModelConfig | "*")[]) : Promise<ModelConfig[]> => {
+		return await this.getAdapter().querySelect<ModelConfig>(
+			this.tableName,
+			fields || this.fieldsList as (keyof ModelConfig | "*")[],
+			this.queryBuild.logic.length > 0 ? this.queryBuild:undefined,
+			this.limitQuantity,
+			this.offsetQuantity,
+			this.orderByQuery,
+			this.joinList,
+		);
+	}
+
+	public paginate = async <ModelConfig = Record<string, ModelContent>>(page?: number, perPage: number = 25) : Promise<PaginatedResponse<ModelConfig>> => {
+		const entries = await this.getAdapter().querySelect<ModelConfig>(
+			this.tableName,
+			this.fieldsList as (keyof ModelConfig | "*")[],
+			this.queryBuild.logic.length > 0 ? this.queryBuild:undefined,
+			perPage,
+			((page || 1) - 1) * perPage,
+			this.orderByQuery,
+			this.joinList,
+		);
+
+		return {
+			data: entries.map(i => ({...i})),
+
+			page: page || 1,
+			perPage,
+
+			totalItems: 1,
+			totalPages: 1,
+		};
 	}
 
 	// -------------------------------------------------
 	// manipulation methods
 	// -------------------------------------------------
 
-	public insert = async <ModelConfig = Record<string, string | number | boolean>>(fields: ModelConfig) => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.queryAdd<ModelConfig>(this.tableName, fields);
+	public insert = async <ModelConfig = Record<string, ModelContent>>(fields: ModelConfig) => {
+		return await this.getAdapter().queryAdd<ModelConfig>(this.tableName, fields);
 	}
 
-	public update = async <ModelConfig = Record<string, string | number | boolean>>(fields: ModelConfig) => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.queryUpdate<ModelConfig>(this.tableName, fields, this.queryBuild);
+	public update = async <ModelConfig = Record<string, ModelContent>>(fields: ModelConfig) => {
+		return await this.getAdapter().queryUpdate<ModelConfig>(this.tableName, fields, this.queryBuild);
 	}
 
 	public delete = async () => {
-		return await (this.constructor as unknown as {adapter: QueryStrategy}).adapter.queryDelete(this.tableName, this.queryBuild);
+		return await this.getAdapter().queryDelete(this.tableName, this.queryBuild);
 	}
 
 	// -------------------------------------------------
 	// helper methods
 	// -------------------------------------------------
+
+	private getAdapter () {
+		return (this.constructor as unknown as {adapter: QueryStrategy}).adapter;
+	}
 
 	private push (type: "and" | "or", subqueries: unknown[]) {
 		if (this.queryBuild.logic.length !== 0 && (this.queryBuild.logic[this.queryBuild.logic.length - 1] as QueryPart).type === type) {
