@@ -6,6 +6,7 @@ import GenericModelContent, { ModelContent } 	from "../../interfaces/ModelConten
 import QueryComparison 							from "../../interfaces/QueryComparison";
 import PaginatedResponse 						from "../../interfaces/PaginatedResponse";
 import JoinClauseInterface 						from "../../interfaces/JoinClause";
+import ColumnOptions from "../../interfaces/ColumnOptions";
 
 export default abstract class Query implements queryInterface {
 
@@ -52,6 +53,22 @@ export default abstract class Query implements queryInterface {
 		query.table(table);
 		
 		return query as queryInterface;
+	}
+
+	// -------------------------------------------------
+	// table methods
+	// -------------------------------------------------
+
+	public static async createTable (tableName: string, columns: Record<string, ColumnOptions>) {
+		return await this.adapter.createTable(tableName, columns);
+	}
+
+	public static async alterTable (tableName: string, columns: Record<string, ColumnOptions>, smartUpdate = true) {
+		return await this.adapter.alterTable(tableName, columns, smartUpdate);
+	}
+
+	public static async dropTable (tableName: string) {
+		return await this.adapter.dropTable(tableName);
 	}
 
 	// -------------------------------------------------
@@ -183,9 +200,9 @@ export default abstract class Query implements queryInterface {
 	// table methods
 	// -------------------------------------------------
 	
-	public getColumns = async <ModelConfig = Record<string, ModelContent>>(fields: (keyof ModelConfig | "*")[] = ['*']) => {
-		const result = await this.getAdapter().getColumns<ModelConfig>(this.tableName, fields);
-		return result.map(i => ({...i}));
+	public getColumns = async <ModelConfig = Record<string, ModelContent>>() => {
+		const result = await this.getAdapter().getColumns<ModelConfig>(this.tableName);
+		return result;
 	}
 
 	// -------------------------------------------------
@@ -235,7 +252,7 @@ export default abstract class Query implements queryInterface {
 	}
 
 	public paginate = async <ModelConfig = Record<string, ModelContent>>(page?: number, perPage: number = 25) : Promise<PaginatedResponse<ModelConfig>> => {
-		const total = await this.getAdapter().count(this.tableName, "*", this.queryBuild.logic.length > 0 ? this.queryBuild:undefined);
+		const total = await this.count();
 		
 		const entries = await this.getAdapter().querySelect<ModelConfig>(
 			this.tableName,

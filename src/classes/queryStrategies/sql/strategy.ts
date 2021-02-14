@@ -9,7 +9,7 @@ import ColumnOptions 		from "../../../interfaces/ColumnOptions";
 import JoinClauseInterface 	from "../../../interfaces/JoinClause";
 
 // Helpers
-import { columnSerialize, joinClauseBuilder, queryResolver, resolveQueryPart } from "./helpers";
+import { columnDeserialize, columnSerialize, joinClauseBuilder, queryResolver, resolveQueryPart, smartUpdate } from "./helpers";
 
 class SqlStrategy implements queryStrategy {
 	// -------------------------------------------------
@@ -61,33 +61,40 @@ class SqlStrategy implements queryStrategy {
 	public async count (table: string, column: string, condition?: QueryPart) {
 		const stringcondition = condition && resolveQueryPart(condition);
 		
-		return await queryResolver(
+		return Object.values((await queryResolver(
 			this.client,
 			`SELECT COUNT(${column}) FROM ${table}${ stringcondition ? ` WHERE ${stringcondition[0]}`:'' }`,
-		);
+		))[0])[0] as number;
 	}
 
 	// -------------------------------------------------
 	// Table methods
 	// -------------------------------------------------
 
-	public async getColumns<T = Record<string, ModelContent>> (table: string, fields?: (keyof T)[]) {
-		const response = (await queryResolver(
+	public async getColumns (table: string) {
+		const query = (await queryResolver(
 			this.client,
 			`SHOW COLUMNS FROM ${table}`,
 		));
 
-		if (fields)
-			return response.filter(i => fields.find(x => x === i.Field));
-		else
-			return response;
+		const response = {} as Record<string, ColumnOptions>;
+		
+		query.forEach(column => {
+			response[column.Field] = columnDeserialize(column);
+		});
+
+		return response;
 	}
 
 	public async createTable<T = Record<string, ModelContent>> (table: string, fields: Record<keyof T, ColumnOptions>) {
+		const key = Object.keys(fields).find(k => fields[k].primary);
+
 		await queryResolver(
 			this.client,
 			`CREATE TABLE ${table} (${
 				Object.keys(fields).map(key => columnSerialize(key, fields[key])).join(", ")
+			}${
+				key ? `,PRIMARY KEY (${key})`:""
 			})`,
 		);
 
@@ -95,12 +102,9 @@ class SqlStrategy implements queryStrategy {
 	}
 
 	public async alterTable<T = Record<string, ModelContent>> (table: string, fields: Record<keyof T, ColumnOptions>) {
-		await queryResolver(
-			this.client,
-			`ALTER TABLE IF EXISTS ${table} (${
-				Object.keys(fields).map(key => columnSerialize(key, fields[key])).join(", ")
-			})`,
-		);
+		const currentFields = await this.getColumns(table);
+		const query = await smartUpdate(table, currentFields, fields);
+		await queryResolver(this.client, query);
 
 		return true;
 	}
@@ -149,7 +153,8 @@ class SqlStrategy implements queryStrategy {
 			Object.values(fields),
 		);
 
-		const primaryKey = (await this.getColumns(table)).find(i => i.Key === "PRI");
+		const columns = await this.getColumns(table);
+		const primaryKey = Object.keys(columns).find(i => columns[i].primary);
 
 		return {...(await this.querySelect(table, undefined, {
 			type: "or",
@@ -157,7 +162,7 @@ class SqlStrategy implements queryStrategy {
 				{
 					type: "and",
 					logic: [
-						[primaryKey.Field, '=', response.insertId],
+						[primaryKey, '=', response.insertId],
 					],
 				},
 			],

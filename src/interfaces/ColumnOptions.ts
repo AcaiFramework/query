@@ -1,7 +1,18 @@
 export default interface ColumnOptions {
-	name: string;
-	type: "string" | "text" | "number" | "boolean" | "date" | "timestamp";
+	type: "string" | "text" | "int" | "boolean" | "date" | "timestamp" | "datetime" | "float" | "json";
 	length?: number;
 	autoIncrement?: boolean;
 	nullable?: boolean;
+	unique?: boolean;
+	primary?: boolean;
+	default?: unknown;
+
+	foreign?: {
+		name?: string;
+		table: string;
+		column?: string;
+
+		onUpdate?: string;
+		onDelete?: string;
+	}
 }

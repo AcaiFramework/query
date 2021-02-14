@@ -18,8 +18,8 @@ export default interface QueryStrategy {
 
 	// table
 	createTable		<T = Record<string, ModelContent>>	(table: string, fields: Record<keyof T, ColumnOptions>)	: Promise<boolean>;
-	getColumns		<T = Record<string, ModelContent>>	(table: string, fields?: (keyof T | "*")[])	: Promise<Record<string, string | number>[]>;
-	alterTable		<T = Record<string, ModelContent>>	(table: string, fields: Record<keyof T, ColumnOptions>)	: Promise<boolean>;
+	getColumns		<T = Record<string, ModelContent>>	(table: string, fields?: (keyof T | "*")[])	: Promise<Record<string, ColumnOptions>>;
+	alterTable		<T = Record<string, ModelContent>>	(table: string, fields: Record<keyof T, ColumnOptions>, smartUpdate?: boolean)	: Promise<boolean>;
 	dropTable											(table: string)	: Promise<boolean>;
 
 	// query

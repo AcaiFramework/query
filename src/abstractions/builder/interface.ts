@@ -3,6 +3,7 @@ import GenericModelContent, { ModelContent } 	from "../../interfaces/ModelConten
 import QueryPart 								from "../../interfaces/QueryPart";
 import QueryComparison 							from "../../interfaces/QueryComparison";
 import PaginatedResponse 						from "../../interfaces/PaginatedResponse";
+import ColumnOptions from "../../interfaces/ColumnOptions";
 
 export default interface AbstractQuery {
 	// -------------------------------------------------
@@ -25,6 +26,12 @@ export default interface AbstractQuery {
 	rawQueryObject (): QueryPart;
 
 	// -------------------------------------------------
+	// table methods
+	// -------------------------------------------------
+
+	getColumns <ModelConfig = Record<string, ModelContent>> (fields?: (keyof ModelConfig | "*")[]) : Promise<Record<string, ColumnOptions>>;
+
+	// -------------------------------------------------
 	// join methods
 	// -------------------------------------------------
 
@@ -42,7 +49,6 @@ export default interface AbstractQuery {
 	avg (columnName: string): Promise<number>;
 	sum (columnName: string): Promise<number>;
 	count (columnName?: string): Promise<number>;
-	getColumns <ModelConfig = Record<string, ModelContent>> (fields?: (keyof ModelConfig | "*")[]) : Promise<Record<string, string | number>[]>;
 
 	// -------------------------------------------------
 	// retrieve methods
