@@ -1,13 +1,16 @@
 {
   "name": "@acai/query",
-  "version": "0.1.3",
+  "version": "0.1.5",
   "repository": "https://github.com/AcaiFramework/query.git",
   "author": "Rafael <rafael.chaves98@hotmail.com>",
   "license": "BSD-3-Clause",
   "private": false,
+  "main": "dist/index.js",
   "scripts": {
-    "test": "deno run -A --unstable test.ts",
-    "start": "ts-node ./yay.ts"
+    "build": "tsc",
+    "test": "ts-node ./test.ts",
+    "start": "ts-node ./yay.ts",
+    "prepublishOnly": "yarn build"
   },
   "devDependencies": {
     "@acai/testing": "^0.1.3",
