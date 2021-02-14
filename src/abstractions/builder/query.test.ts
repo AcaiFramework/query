@@ -35,10 +35,10 @@ test.group("Test abstract query methods", () => {
 
 		// build test
 		query.where('id', 2);
-		const raw = query.raw();
+		const raw = query.rawQueryObject();
 
 		expect(raw).toBeDefined();
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{
@@ -55,7 +55,7 @@ test.group("Test abstract query methods", () => {
 		const query = new Query;
 		query.where('id', 2).where('name', 'John');
 
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{
@@ -71,9 +71,9 @@ test.group("Test abstract query methods", () => {
 
 	test('Test compostestion of a array and query', (expect) => {
 		const query = new Query;
-		query.where([['id', 2], ['name', 'John']]);
+		query.where([['id', "=", 2], ['name', "=", 'John']]);
 
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{
@@ -97,8 +97,8 @@ test.group("Test abstract query methods", () => {
 
 		query.where('id', '!=', 2);
 
-		expect(query.raw()).toBeDefined();
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBeDefined();
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{
@@ -115,7 +115,7 @@ test.group("Test abstract query methods", () => {
 		const query = new Query;
 		query.where('id', '!=', 2).where('name', '!=', 'John');
 
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{
@@ -133,7 +133,7 @@ test.group("Test abstract query methods", () => {
 		const query = new Query;
 		query.where([['id', '!=', 2], ['name', '!=', 'John']]);
 
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{
@@ -155,7 +155,7 @@ test.group("Test abstract query methods", () => {
 		const query = new Query;
 		query.where('id', 2).orWhere('name', 'John');
 
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{
@@ -182,7 +182,7 @@ test.group("Test abstract query methods", () => {
 		const query = new Query;
 		query.where('id', '!=', 2).orWhere('name', '!=', 'John');
 
-		expect(query.raw()).toBe({
+		expect(query.rawQueryObject()).toBe({
 			type: "or",
 			logic: [
 				{

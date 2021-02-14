@@ -7,7 +7,7 @@ A simple modular, scalable query builder that let you toggle strategies to easil
 
 ## Supports
 - [x] MySQL
-- [ ] PostgreSQL
+- [x] PostgreSQL
 - [ ] mongo
 - [ ] sqlite
 
@@ -27,7 +27,7 @@ yarn add @acai/query
 The first thing you are going to need is setup your query, you can easily define your default query or just setup one as follows:
 
 ``` typescript
-import query, { setDefault, addQuery } 	from "query/mod.ts";
+import query, { setDefault, addQuery } 	from "@acai/query";
 
 // Add query of sql type
 await addQuery("secondary", "sql", { /* sql config */ });
@@ -46,7 +46,7 @@ const pgquery = query(); // <-- this is a postgreSQL query builder
 ### Querying
 You can easily search select using the query
 ``` typescript
-import query from "query/mod.ts";
+import query from "@acai/query";
 
 const results = await query().table("people").where("id", 5).get(["name", "age"]);
 ```
@@ -67,7 +67,7 @@ await query().table("people").where("id", 2).orWhere("name", "Robert").get();
 
 ### Inserting
 ``` typescript
-import query from "query/mod.ts";
+import query from "@acai/query";
 
 await query().table("people").insert({
     name: "John",
@@ -78,7 +78,7 @@ await query().table("people").insert({
 
 ### Updating
 ``` typescript
-import query from "query/mod.ts";
+import query from "@acai/query";
 
 await query().table("people").where("id", 5).update({
     name: "John"
@@ -87,7 +87,7 @@ await query().table("people").where("id", 5).update({
 
 ### Deleting
 ``` typescript
-import query from "query/mod.ts";
+import query from "@acai/query";
 
 await query().table("people").where("id", 5).delete();
 ```
