@@ -17,10 +17,18 @@ export default interface QueryStrategy {
 	avg (table: string, column: string, condition?: QueryPart) : Promise<number>;
 
 	// table
+	existsTable											(table: string)	: Promise<boolean>;
 	createTable		<T = Record<string, ModelContent>>	(table: string, fields: Record<keyof T, ColumnOptions>)	: Promise<boolean>;
 	getColumns		<T = Record<string, ModelContent>>	(table: string, fields?: (keyof T | "*")[])	: Promise<Record<string, ColumnOptions>>;
 	alterTable		<T = Record<string, ModelContent>>	(table: string, fields: Record<keyof T, ColumnOptions>, smartUpdate?: boolean)	: Promise<boolean>;
 	dropTable											(table: string)	: Promise<boolean>;
+
+	// transaction
+	startTransaction 		(name?: string)	: Promise<void>;
+	commitTransaction		(name?: string)	: Promise<void>;
+	rollbackTransaction		(name?: string)	: Promise<void>;
+	savepointTransaction 	(name: string)	: Promise<void>;
+	releaseTransaction 		(name: string)	: Promise<void>;
 
 	// query
 	queryAdd		<T = Record<string, ModelContent>>	(table: string, fields: T)																															: Promise<string | number>;

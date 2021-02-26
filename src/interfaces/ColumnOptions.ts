@@ -1,5 +1,5 @@
 export default interface ColumnOptions {
-	type: "string" | "text" | "int" | "boolean" | "date" | "timestamp" | "datetime" | "float" | "json";
+	type: "string" | "text" | "int" | "bigint" | "smallint" | "enum" | "binary" | "boolean" | "date" | "timestamp" | "datetime" | "time" | "float" | "json";
 	length?: number;
 	autoIncrement?: boolean;
 	nullable?: boolean;

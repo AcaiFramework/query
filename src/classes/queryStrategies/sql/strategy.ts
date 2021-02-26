@@ -1,5 +1,5 @@
 // Packages
-import * as Client from "mysql";
+import * as Client from "mysql2";
 
 // Interfaces
 import ModelContent 		from "../../../interfaces/ModelContent";
@@ -71,6 +71,15 @@ class SqlStrategy implements queryStrategy {
 	// Table methods
 	// -------------------------------------------------
 
+	public async existsTable (table: string) {
+		const query = (await queryResolver(
+			this.client,
+			`SHOW TABLES`,
+		));
+
+		return !!query.find(i => Object.values(i)[0] === table);
+	}
+
 	public async getColumns (table: string) {
 		const query = (await queryResolver(
 			this.client,
@@ -119,6 +128,30 @@ class SqlStrategy implements queryStrategy {
 	}
 
 	// -------------------------------------------------
+	// Transact methods
+	// -------------------------------------------------
+
+	public async startTransaction () {
+		await queryResolver(this.client, `START TRANSACTION`);
+	}
+
+	public async savepointTransaction (name: string) {
+		await queryResolver(this.client, `SAVEPOINT ${name}`);
+	}
+
+	public async releaseTransaction (name: string) {
+		await queryResolver(this.client, `RELEASE SAVEPOINT ${name}`);
+	}
+
+	public async rollbackTransaction () {
+		await queryResolver(this.client, `ROLLBACK`);
+	}
+
+	public async commitTransaction () {
+		await queryResolver(this.client, `COMMIT`);
+	}
+
+	// -------------------------------------------------
 	// CRUD methods
 	// -------------------------------------------------
 
@@ -132,15 +165,15 @@ class SqlStrategy implements queryStrategy {
 			} FROM ${
 				table
 			}${
-				stringcondition ? ` WHERE ${stringcondition[0]}`:''
-			}${
-				limit ? ` LIMIT ${limit}`:""
-			}${ offset ? ` OFFSET ${offset}`:""}${
-				joinClause ? joinClauseBuilder(joinClause):""
+				stringcondition && stringcondition[0] ? ` WHERE ${stringcondition[0]}`:''
 			}${
 				groupBy ? ` GROUP BY ${groupBy}`:""
 			}${
 				orderBy ? ` ORDER BY ${orderBy.by} ${orderBy.order || "ASC"}`:""
+			}${
+				limit ? ` LIMIT ${limit}`:""
+			}${ offset ? ` OFFSET ${offset}`:""}${
+				joinClause ? joinClauseBuilder(joinClause):""
 			}`,
 			stringcondition && stringcondition[1]
 		);
@@ -153,20 +186,7 @@ class SqlStrategy implements queryStrategy {
 			Object.values(fields),
 		);
 
-		const columns = await this.getColumns(table);
-		const primaryKey = Object.keys(columns).find(i => columns[i].primary);
-
-		return {...(await this.querySelect(table, undefined, {
-			type: "or",
-			logic: [
-				{
-					type: "and",
-					logic: [
-						[primaryKey, '=', response.insertId],
-					],
-				},
-			],
-		}))[0]};
+		return response.insertId;
 	}
 
 	public async queryUpdate<T = Record<string, ModelContent>>(table: string, fields: Partial<T>, condition?: QueryPart) {
@@ -174,7 +194,7 @@ class SqlStrategy implements queryStrategy {
 		const stringcondition 	= condition && resolveQueryPart(condition);
 		const query				= await queryResolver(
 			this.client,
-			`UPDATE ${table} SET ${values}${stringcondition ? ` WHERE ${stringcondition[0]}`:''}`,
+			`UPDATE ${table} SET ${values}${stringcondition && stringcondition[0] ? ` WHERE ${stringcondition[0]}`:''}`,
 			[...Object.values(fields), ...((stringcondition && stringcondition[1]) || [])],
 		);
 
@@ -185,7 +205,7 @@ class SqlStrategy implements queryStrategy {
 		const stringcondition 	= condition && resolveQueryPart(condition);
 		const query				= await queryResolver(
 			this.client,
-			`DELETE FROM ${table}${stringcondition ? ` WHERE ${stringcondition[0]}`:''}`,
+			`DELETE FROM ${table}${stringcondition && stringcondition[0] ? ` WHERE ${stringcondition[0]}`:''}`,
 			(stringcondition && stringcondition[1]),
 		);
 

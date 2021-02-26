@@ -43,11 +43,11 @@ export async function setDefault(name:string, config?: Record<string, ModelConte
 // -------------------------------------------------
 
 // Base abstract query
-export {default as AbstractQuery} from './src/abstractions/builder/index';
+export {default as AbstractQuery} 	from './src/abstractions/builder/index';
 
 // Implementations
 export {default as SqlQuery} 		from './src/classes/queryStrategies/sql/index';
 export {default as PgQuery} 		from './src/classes/queryStrategies/postgresql/index';
 
 // default query
-export default (key?: string) => queries[key || "default"];
+export default (key?: string): typeof AbstractQuery => queries[key || "default"];

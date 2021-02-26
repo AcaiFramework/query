@@ -71,6 +71,15 @@ class SqlStrategy implements queryStrategy {
 	// Table methods
 	// -------------------------------------------------
 
+	public async existsTable (table: string) {
+		const query = (await queryResolver(
+			this.client,
+			`SHOW TABLES`,
+		));
+
+		return !!query.find(i => Object.values(i)[0] === table);
+	}
+
 	public async getColumns (table: string) {
 		const query = (await queryResolver(
 			this.client,
@@ -134,13 +143,13 @@ class SqlStrategy implements queryStrategy {
 			}${
 				stringcondition ? ` WHERE ${stringcondition[0]}`:''
 			}${
-				limit ? ` LIMIT ${limit}`:""
-			}${ offset ? ` OFFSET ${offset}`:""}${
-				joinClause ? joinClauseBuilder(joinClause):""
-			}${
 				groupBy ? ` GROUP BY ${groupBy}`:""
 			}${
 				orderBy ? ` ORDER BY ${orderBy.by} ${orderBy.order || "ASC"}`:""
+			}${
+				limit ? ` LIMIT ${limit}`:""
+			}${ offset ? ` OFFSET ${offset}`:""}${
+				joinClause ? joinClauseBuilder(joinClause):""
 			}`,
 			stringcondition && stringcondition[1]
 		);

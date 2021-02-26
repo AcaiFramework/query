@@ -1,5 +1,5 @@
 // Packages
-import * as Client from "mysql";
+import * as Client from "mysql2";
 
 // Interfaces
 import ModelContent 		from "../../../interfaces/ModelContent";
@@ -62,8 +62,10 @@ const typeMaps = {
 };
 
 export const columnSerialize = (key: string, data: ColumnOptions) => {
+	const length = data.length || ["string", "float", "int"].indexOf(data.type) + 1 > 0 ? 255: undefined;
+
 	return `${key} ${
-		typeMaps[data.type].toLowerCase()}${data.length ? `(${data.length})`:""
+		typeMaps[data.type].toLowerCase()}${length ? `(${length})`:""
 	}${
 		data.nullable ? " NULL":" NOT NULL"
 	}${
@@ -115,7 +117,14 @@ export const smartUpdate = async (tableName: string, oldColumns: Record<string, 
 
 	// columns to add
 	Object.keys(updatedColumns).forEach(key => {
-		if (!oldColumns[key]) toUpdateColumns.push({...updatedColumns[key], name: key, action: "ADD"});
+		if (!oldColumns[key]) {
+			toUpdateColumns.push({
+				...updatedColumns[key],
+				length	: updatedColumns[key].length || ["string", "float", "int"].indexOf(updatedColumns[key].type) + 1 > 0 ? 255: undefined,
+				name	: key,
+				action	: "ADD",
+			});
+		}
 	});
 
 	// columns to delete
@@ -145,6 +154,7 @@ export const smartUpdate = async (tableName: string, oldColumns: Record<string, 
 					toUpdateColumns.push({
 						...updatedColumns[key],
 
+						length	: updatedColumns[key].length || ["string", "float", "int"].indexOf(updatedColumns[key].type) + 1 > 0 ? 255: undefined,
 						name	: key,
 						action	: "MODIFY COLUMN",
 						position: fpos !== spos ? pos : undefined,
