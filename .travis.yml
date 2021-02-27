@@ -1,5 +1,8 @@
 language: sh
 
+services:
+  - mysql
+
 install:
   - curl -L https://deno.land/x/install/install.sh | sh -s v1.6.0
   - export PATH="$HOME/.deno/bin:$PATH"

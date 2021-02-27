@@ -9,7 +9,7 @@ import ColumnOptions 		from "../../../interfaces/ColumnOptions";
 import JoinClauseInterface 	from "../../../interfaces/JoinClause";
 
 // Helpers
-import { columnDeserialize, columnSerialize, joinClauseBuilder, queryResolver, resolveQueryPart, smartUpdate } from "./helpers";
+import { tableDeserialize, columnSerialize, joinClauseBuilder, queryResolver, resolveQueryPart, smartUpdate } from "./helpers";
 
 class SqlStrategy implements queryStrategy {
 	// -------------------------------------------------
@@ -83,27 +83,37 @@ class SqlStrategy implements queryStrategy {
 	public async getColumns (table: string) {
 		const query = (await queryResolver(
 			this.client,
-			`SHOW COLUMNS FROM ${table}`,
+			`SHOW CREATE TABLE ${table}`,
 		));
 
-		const response = {} as Record<string, ColumnOptions>;
-		
-		query.forEach(column => {
-			response[column.Field] = columnDeserialize(column);
-		});
+		if (query.length === 0)
+			return {};
 
-		return response;
+		return tableDeserialize(query[0]["Create Table"]);
 	}
 
 	public async createTable<T = Record<string, ModelContent>> (table: string, fields: Record<keyof T, ColumnOptions>) {
 		const key = Object.keys(fields).find(k => fields[k].primary);
+		const columns = [] as string[];
+		const foreign = [] as string[];
+
+		// build columns
+		Object.keys(fields).map(key => {
+			const column = columnSerialize(key, fields[key]);
+
+			columns.push(column[0] as string);
+
+			if (column[1]) foreign.push(column[1]);
+		});
 
 		await queryResolver(
 			this.client,
 			`CREATE TABLE ${table} (${
-				Object.keys(fields).map(key => columnSerialize(key, fields[key])).join(", ")
+				columns.join(", ")
 			}${
 				key ? `,PRIMARY KEY (${key})`:""
+			}${
+				foreign.length > 0 ? `, ${foreign.join(", ")}`:""
 			})`,
 		);
 
