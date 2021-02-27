@@ -1,3 +1,6 @@
+// Interfaces
+import constraintTypes from "./constraintInterfaces";
+
 export default interface ColumnOptions {
 	type: "string" | "text" | "int" | "bigint" | "smallint" | "enum" | "binary" | "boolean" | "date" | "timestamp" | "datetime" | "time" | "float" | "json";
 	length?: number;
@@ -12,7 +15,7 @@ export default interface ColumnOptions {
 		table: string;
 		column?: string;
 
-		onUpdate?: string;
-		onDelete?: string;
+		onUpdate?: constraintTypes;
+		onDelete?: constraintTypes;
 	}
 }

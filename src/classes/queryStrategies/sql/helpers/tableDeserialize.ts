@@ -1,5 +1,6 @@
 // Interfaces
-import ColumnOptions from "../../../../interfaces/ColumnOptions";
+import ColumnOptions 	from "../../../../interfaces/ColumnOptions";
+import constraintTypes 	from "../../../../interfaces/constraintInterfaces";
 
 // Parts
 import typeMaps from "./typeMaps";
@@ -13,13 +14,15 @@ export default function tableDeserialize (tableString: string): Record<string, C
 		
 		// columns
 		if (parts[0].match(/^\`.+\`$/)) {
-			const [type, length] = parts[1].split("(");
+			const [type, length] 	= parts[1].split("(");
+			const defaultValue 		= parts.find(i => i === "DEFAULT") ? parts[parts.indexOf("DEFAULT") + 1].replace(/(\`|\')/g, ""):undefined;
 
 			columns[parts[0].replace(/\`/g, "")] = {
 				type			: Object.keys(typeMaps).find(key => typeMaps[key] === type.toUpperCase()) as keyof typeof typeMaps,
 				length			: length ? parseInt(length.replace(/(\(|\))/g, "")) : undefined,
 				autoIncrement 	: !!parts.find(i => i === "AUTO_INCREMENT"),
 				nullable		: !parts.find((item, index) => item === "NOT" && parts[index + 1 ] && parts[index + 1] === "NULL"),
+				default			: !!(!defaultValue || (defaultValue && defaultValue.match(/\D+/))) ? defaultValue : parseFloat(defaultValue as string),
 			};
 		}
 		// foreign key
@@ -30,8 +33,8 @@ export default function tableDeserialize (tableString: string): Record<string, C
 				name		: parts[1].replace(/\`/g, ""),
 				table		: parts[tableNameIndex].replace(/\`/g, ""),
 				column		: parts[tableNameIndex + 1].replace(/(\(|\)|\`|\,)/g, ""),
-				onUpdate	: parts.indexOf("ON") + 1 === parts.indexOf("UPDATE") ? parts[parts.indexOf("UPDATE") + 1]:undefined,
-				onDelete	: parts.indexOf("ON") + 1 === parts.indexOf("DELETE") ? parts[parts.indexOf("DELETE") + 1]:undefined,
+				onUpdate	: parts[parts.indexOf("UPDATE") - 1] === "ON" ? (parts[parts.indexOf("UPDATE") + 1] as constraintTypes):undefined,
+				onDelete	: parts[parts.indexOf("DELETE") - 1] === "ON" ? (parts[parts.indexOf("DELETE") + 1] as constraintTypes):undefined,
 			};
 		}
 		// primary key
